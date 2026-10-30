@@ -1,5 +1,5 @@
-// 심플 다이어트 offline cache (v5ea981de29)
-const CACHE = "sd-5ea981de29";
+// 심플 다이어트 offline cache (v7a9d3df40e)
+const CACHE = "sd-7a9d3df40e";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
