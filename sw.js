@@ -1,5 +1,5 @@
-// 심플 다이어트 offline cache (vc115f9b493)
-const CACHE = "sd-c115f9b493-3";
+// 심플 다이어트 offline cache (v4e4f069e01)
+const CACHE = "sd-4e4f069e01-4";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith("sd-") && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -9,7 +9,7 @@ self.addEventListener("fetch", (e) => {
   if (new URL(req.url).pathname.startsWith("/workout-app/")) return; // another app on this origin: never serve or cache its files
   if (req.mode === "navigate") {
     // network first for the page so updates arrive; cached copy when offline
-    e.respondWith(fetch(req).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("./index.html", cp)); return r; }).catch(() => caches.match("./index.html").then((r) => r || caches.match("./"))));
+    e.respondWith(fetch(req, { cache: "no-store" }).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("./index.html", cp)); return r; }).catch(() => caches.match("./index.html").then((r) => r || caches.match("./"))));
     return;
   }
   e.respondWith(caches.match(req).then((r) => r || fetch(req)));
