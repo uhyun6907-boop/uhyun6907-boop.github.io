@@ -1,0 +1,9 @@
+{
+  "storageKey": "my-simple-diet-v1",
+  "defaultGoalKg": 76,
+  "defaultPlanSegs": [{ "until": 74, "per": 1 }, { "until": 75, "per": 2 }, { "until": 76, "per": 3 }],
+  "kgRange": [20, 300],
+  "perRange": [0.1, 99],
+  "morningHours": [4, 12],
+  "sync": { "owner": "uhyun6907-boop", "repo": "sd-data", "branch": "main", "path": "records.json" }
+}
