@@ -981,7 +981,6 @@ export default function App() {
   const [dDate, setDDate] = useState<string>(defDate());
   const [slot, setSlot] = useState<"am" | "pm">(defSlot());
   const [editId, setEditId] = useState<number | null>(null);
-  const [delId, setDelId] = useState<number | null>(null);
   const [range, setRange] = useState<RangeKey>("31");
   const [listN, setListN] = useState<number>(40);
   const [showCsv, setShowCsv] = useState<boolean>(false);
@@ -991,7 +990,7 @@ export default function App() {
   const [nav, setNav] = useState<{ n: number; dir: string }>({ n: 0, dir: "" });
   const [pulse, setPulse] = useState<{ x: number; w: number; at: number } | null>(null);
   useEffect(() => { if (!pulse) return; const tm = window.setTimeout(() => setPulse(null), 3400); return () => window.clearTimeout(tm); }, [pulse]);
-  const go = (v: string): void => { if (v === "graph") resetGraph(); if (v !== view) setNav((o: { n: number; dir: string }) => ({ n: o.n + 1, dir: v === "entry" ? "back" : "fwd" })); setView(v); setDelId(null); try { window.scrollTo(0, 0); } catch (_e) { setFlash(""); } };
+  const go = (v: string): void => { if (v === "graph") resetGraph(); if (v !== view) setNav((o: { n: number; dir: string }) => ({ n: o.n + 1, dir: v === "entry" ? "back" : "fwd" })); setView(v); try { window.scrollTo(0, 0); } catch (_e) { setFlash(""); } };
 
   useEffect(() => {
     const s = loadStore();
@@ -1295,13 +1294,13 @@ export default function App() {
     go("graph");
   };
   const startEdit = (e: Entry): void => {
-    setEditId(e.id); setVal(kgToDigits(e.w)); freshRef.current = true; setDDate(tToInput(e.t).slice(0, 10)); setSlot(isAM(e.t) ? "am" : "pm"); setDelId(null); setFlash("");
+    setEditId(e.id); setVal(kgToDigits(e.w)); freshRef.current = true; setDDate(tToInput(e.t).slice(0, 10)); setSlot(isAM(e.t) ? "am" : "pm"); setFlash("");
     go("entry");
   };
   const cancelEdit = (): void => { setEditId(null); setVal(""); setDDate(defDate()); setSlot(defSlot()); };
   const remove = (id: number): void => {
-    if (delId === id) { setEntries((es: Entry[]) => es.filter((e: Entry) => e.id !== id)); setDelId(null); if (editId === id) cancelEdit(); }
-    else setDelId(id);
+    setEntries((es: Entry[]) => es.filter((e: Entry) => e.id !== id));
+    if (editId === id) cancelEdit();
   };
   const toggleStamp = (dk: string, k: "meal" | "ex"): void => {
     setStamps((s: Record<string, Stamp>) => { const cur: Stamp = s[dk] || { meal: false, ex: false }; return { ...s, [dk]: { meal: k === "meal" ? !cur.meal : cur.meal, ex: k === "ex" ? !cur.ex : cur.ex } }; });
@@ -1500,7 +1499,7 @@ export default function App() {
           {roundBtn("−", "축소", () => zoomBy(1.4))}
           {roundBtn("+", "확대", () => zoomBy(0.7))}
         </div>
-        <GraphView readings={gReadings} slot={gSlot} onSlot={setGSlot} series={avgSeries} bucket={avgMode} note={avgMode === "raw" ? undefined : avgMode === "7" ? "주 평균 (7일 단위)" : avgMode === "30" ? "월 평균" : "분기 평균 (3개월)"} ma={S.ma} showMa={false} goal={goal} end={vEnd} span={vSpan} todayN={todayN} onView={setView2} plan={plan.on && planCalc ? planCalc.pts : undefined} planCfg={plan.on && planCalc && planW0 !== null && plan.start !== null ? { start: plan.start, w0: planW0, segs: plan.segs && plan.segs.length ? plan.segs : DEFAULT_SEGS } : null} onPlanCommit={(c: PlanDraft) => setPlan((pl: PlanCfg) => ({ ...pl, start: c.start, w0: c.w0, segs: c.segs }))} pulse={gPulse} onEdit={openGEdit} onDelete={(id: number) => { setEntries((es: Entry[]) => es.filter((e: Entry) => e.id !== id)); if (editId === id) cancelEdit(); }} />
+        <GraphView readings={gReadings} slot={gSlot} onSlot={setGSlot} series={avgSeries} bucket={avgMode} note={avgMode === "raw" ? undefined : avgMode === "7" ? "주 평균 (7일 단위)" : avgMode === "30" ? "월 평균" : "분기 평균 (3개월)"} ma={S.ma} showMa={false} goal={goal} end={vEnd} span={vSpan} todayN={todayN} onView={setView2} plan={plan.on && planCalc ? planCalc.pts : undefined} planCfg={plan.on && planCalc && planW0 !== null && plan.start !== null ? { start: plan.start, w0: planW0, segs: plan.segs && plan.segs.length ? plan.segs : DEFAULT_SEGS } : null} onPlanCommit={(c: PlanDraft) => setPlan((pl: PlanCfg) => ({ ...pl, start: c.start, w0: c.w0, segs: c.segs }))} pulse={gPulse} onEdit={openGEdit} onDelete={remove} />
         <div style={{ flex: "0 0 auto", display: "flex", flexWrap: "nowrap", alignItems: "center", gap: 6, padding: "4px 2px 0", borderTop: `1px solid ${DIV}` }}>
           <svg width="30" height="26" viewBox="0 0 30 26" aria-hidden="true"><rect x="1" y="1" width="28" height="24" rx="5" fill={PANEL} stroke={AVG} strokeWidth={2} /><path d="M6 19 L12 12 L17 15 L24 7" fill="none" stroke={AVG} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" /></svg>
           <span style={{ fontSize: 15, fontWeight: 700, color: AVG, marginRight: "auto", whiteSpace: "nowrap" }}>평균</span>
@@ -1565,7 +1564,7 @@ export default function App() {
         </div>
       </Section>) : null}
 
-      {view === "records" ? (<Section heading="기록 목록" id="records" caption="삭제는 한 번 더 눌러야 확정돼요.">
+      {view === "records" ? (<Section heading="기록 목록" id="records">
         <div style={{ display: "flex", flexDirection: "column" }}>
           {recent.map((e: Entry) => (
             <div key={e.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "8px 0", borderBottom: `1px solid ${theme.border.subtle}`, background: editId === e.id ? theme.fill.hover : "transparent" }}>
@@ -1573,7 +1572,7 @@ export default function App() {
               <span style={{ minWidth: 56, color: theme.text.secondary, fontSize: 14 }}>{tagOf(e.t)}</span>
               <span style={{ minWidth: 64, textAlign: "right", color: theme.text.primary, fontSize: 16, fontVariantNumeric: "tabular-nums" }}>{kg(e.w)}kg</span>
               <Button label="수정" onClick={() => startEdit(e)} />
-              <Button label={delId === e.id ? "삭제 확인" : "삭제"} onClick={() => remove(e.id)} />
+              <Button label="삭제" onClick={() => remove(e.id)} />
             </div>
           ))}
         </div>
