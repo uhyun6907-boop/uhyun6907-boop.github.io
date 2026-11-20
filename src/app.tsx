@@ -466,7 +466,6 @@ function GraphView(p: { readings: Reading[]; slot?: GSlot; onSlot?: (v: GSlot) =
   const start = p.end - p.span;
   const [tip, setTip] = useState<Reading | null>(null);
   const [hold, setHold] = useState<Reading | null>(null);
-  const [holdDel, setHoldDel] = useState<boolean>(false);
   const isAvgMode = !!(p.series && p.series.length);
   // plan-line drag edit
   const [pe, setPe] = useState<boolean>(false);
@@ -480,7 +479,7 @@ function GraphView(p: { readings: Reading[]; slot?: GSlot; onSlot?: (v: GSlot) =
     canPlan: boolean; editing: boolean; cfg: PlanDraft | null; planPx: [number, number][]; handles: { cx: number; cy: number; j: number }[]; inv: { start: number; span: number; L: number; plotW: number; T: number; plotH: number; lo: number; hi: number }; scale: { lo: number; hi: number; ystep: number };
     enterPe: () => void; exitPe: () => void; dragStart: (j: number) => void; dragMove: (c: PlanDraft, j: number) => void; dragEnd: (base: PlanDraft, last: PlanDraft | null, ok: boolean) => void };
   const live = useRef<Live>({ end: p.end, span: p.span, L, plotW, W, H, onView: p.onView, pts: [], setTip, setHold, canHold: false, canPlan: false, editing: false, cfg: null, planPx: [], handles: [], inv: { start: 0, span: 1, L, plotW, T, plotH, lo: 0, hi: 1 }, scale: { lo: 0, hi: 1, ystep: 1 }, enterPe: () => undefined, exitPe: () => undefined, dragStart: () => undefined, dragMove: () => undefined, dragEnd: () => undefined });
-  live.current = { ...live.current, end: p.end, span: p.span, L, plotW, W, H, onView: p.onView, setTip, setHold: (r: Reading | null) => { setHold(r); setHoldDel(false); }, canHold: !isAvgMode && !!p.onEdit,
+  live.current = { ...live.current, end: p.end, span: p.span, L, plotW, W, H, onView: p.onView, setTip, setHold, canHold: !isAvgMode && !!p.onEdit,
     canPlan, editing, cfg: p.planCfg || null,
     enterPe: () => { setPe(true); setTip(null); setHold(null); try { if (navigator.vibrate) navigator.vibrate(20); } catch (_e) { /* ignore */ } },
     exitPe,
@@ -923,22 +922,17 @@ function GraphView(p: { readings: Reading[]; slot?: GSlot; onSlot?: (v: GSlot) =
       ) : null}
       {holdOn && hold ? (() => {
         const hx = x(hold.x), hy = y(hold.w);
-        const pw = holdDel ? 196 : 150, ph = 74;
+        const pw = 150, ph = 74;
         const left = Math.max(4, Math.min(W - pw - 4, hx - pw / 2));
         const top = hy - ringR - 12 - ph >= 4 ? hy - ringR - 12 - ph : Math.min(H - ph - 4, hy + ringR + 12);
         const dk = numToDk(Math.floor(hold.x));
         const pb: CSSProperties = { flex: "1 1 0", height: 34, borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", touchAction: "manipulation", padding: "0 8px" };
         return (
           <div role="dialog" aria-label="기록 편집 메뉴" style={{ position: "absolute", left, top, width: pw, height: ph, boxSizing: "border-box", padding: 6, borderRadius: 12, background: PANEL, border: `1.5px solid ${INK}`, boxShadow: "0 4px 14px rgba(0,0,0,0.22)", display: "flex", flexDirection: "column", gap: 5, zIndex: 5, WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", fontFamily: theme.font.family } as CSSProperties}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, textAlign: "center", whiteSpace: "nowrap" }}>{holdDel ? `${Number(dk.slice(4, 6))}/${Number(dk.slice(6, 8))} ${hold.am ? "오전" : "오후"} ${kg(hold.w)}kg 삭제할까요?` : `${Number(dk.slice(4, 6))}/${Number(dk.slice(6, 8))} ${hold.am ? "오전" : "오후"} ${kg(hold.w)}kg`}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: C.sub, textAlign: "center", whiteSpace: "nowrap" }}>{`${Number(dk.slice(4, 6))}/${Number(dk.slice(6, 8))} ${hold.am ? "오전" : "오후"} ${kg(hold.w)}kg`}</div>
             <div style={{ display: "flex", gap: 6 }}>
-              {holdDel ? (<>
-                <button onClick={() => { const id = hold.id as number; setHold(null); setHoldDel(false); if (p.onDelete) p.onDelete(id); }} style={{ ...pb, border: "none", background: WARN_TX, color: "#ffffff" }}>삭제</button>
-                <button onClick={() => setHoldDel(false)} style={{ ...pb, border: `1px solid ${C.border}`, background: PANEL, color: C.ink }}>취소</button>
-              </>) : (<>
-                <button onClick={() => { const id = hold.id as number; setHold(null); if (p.onEdit) p.onEdit(id); }} style={{ ...pb, border: "none", background: AVG, color: "#ffffff" }}>편집</button>
-                <button onClick={() => setHoldDel(true)} style={{ ...pb, border: `1px solid ${WARN_TX}`, background: PANEL, color: WARN_TX }}>삭제</button>
-              </>)}
+              <button onClick={() => { const id = hold.id as number; setHold(null); if (p.onEdit) p.onEdit(id); }} style={{ ...pb, border: "none", background: AVG, color: "#ffffff" }}>편집</button>
+              <button onClick={() => { const id = hold.id as number; setHold(null); if (p.onDelete) p.onDelete(id); }} style={{ ...pb, border: `1px solid ${WARN_TX}`, background: PANEL, color: WARN_TX }}>삭제</button>
             </div>
           </div>
         );
