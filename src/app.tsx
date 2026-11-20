@@ -997,7 +997,7 @@ export default function App() {
   const [nav, setNav] = useState<{ n: number; dir: string }>({ n: 0, dir: "" });
   const [pulse, setPulse] = useState<{ x: number; w: number; at: number } | null>(null);
   useEffect(() => { if (!pulse) return; const tm = window.setTimeout(() => setPulse(null), 3400); return () => window.clearTimeout(tm); }, [pulse]);
-  const go = (v: string): void => { if (v !== view) setNav((o: { n: number; dir: string }) => ({ n: o.n + 1, dir: v === "entry" ? "back" : "fwd" })); setView(v); setDelId(null); try { window.scrollTo(0, 0); } catch (_e) { setFlash(""); } };
+  const go = (v: string): void => { if (v === "graph") resetGraph(); if (v !== view) setNav((o: { n: number; dir: string }) => ({ n: o.n + 1, dir: v === "entry" ? "back" : "fwd" })); setView(v); setDelId(null); try { window.scrollTo(0, 0); } catch (_e) { setFlash(""); } };
 
   useEffect(() => {
     const s = loadStore();
@@ -1149,6 +1149,8 @@ export default function App() {
   const spanMap: Record<RangeKey, number> = { "7": 7, "31": 31, "90": 90, "365": 365, all: 0 };
   const [vEnd, setVEnd] = useState<number>(todayN + 1);
   const [vSpan, setVSpan] = useState<number>(31);
+  const [avgMode, setAvgMode] = useState<string>("raw");
+  const resetGraph = (): void => { setVEnd(todayN + 1); setVSpan(31); setAvgMode("raw"); };
   const [showMa, setShowMa] = useState<boolean>(true);
   const firstN = S.days.length ? S.days[0].n : todayN - 30;
   const maxEnd = todayN + 1;
@@ -1162,7 +1164,6 @@ export default function App() {
   const spanOf = (rk: RangeKey): number => (rk === "all" ? maxSpan : Number(rk));
   const isActive = (rk: RangeKey): boolean => Math.abs(vEnd - maxEnd) < 0.5 && Math.abs(vSpan - Math.min(spanOf(rk), maxSpan)) < 0.5;
   const readings = useMemo(() => S.sorted.map((e: Entry): Reading => ({ x: dayNum(e.t.slice(0, 8)) + (Number(e.t.slice(8, 10)) * 60 + Number(e.t.slice(10, 12))) / 1440, w: e.w, am: isAM(e.t), id: e.id })), [S.sorted]);
-  const [avgMode, setAvgMode] = useState<string>("raw");
   const [gSlot, setGSlotS] = useState<GSlot>(loadGSlot);
   const setGSlot = (v: GSlot): void => { setGSlotS(v); saveGSlot(v); };
   const gReadings = useMemo(() => (gSlot === "both" ? readings : readings.filter((r: Reading) => r.am === (gSlot === "am"))), [readings, gSlot]);
@@ -1295,10 +1296,7 @@ export default function App() {
     });
     setFlash(`✓ ${Number(dk.slice(4, 6))}/${Number(dk.slice(6, 8))} ${slot === "am" ? "오전" : "오후"} ${kg(wr)}kg ${eid !== null ? "수정됨" : replaced ? "저장 (기존 값 교체)" : "저장됨"} · 그래프에 반영`);
     setVal(""); setEditId(null); setDDate(defDate()); setSlot(defSlot());
-    // open the graph on the saved point (raw view, last month around it) and pulse the new dot
     const pn = dayNum(dk);
-    setAvgMode("raw");
-    setView2(pn + 4, 31);
     setPulse({ x: pn + (slot === "am" ? 7 : 20) / 24, w: wr, at: Date.now() });
     go("graph");
   };
