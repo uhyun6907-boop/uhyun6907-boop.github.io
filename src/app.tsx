@@ -1514,7 +1514,7 @@ export default function App() {
           <span style={{ fontSize: 15, fontWeight: 700, color: AVG, marginRight: "auto", whiteSpace: "nowrap" }}>평균</span>
           {["raw", "7", "30", "90"].map((m: string) => {
             const on = avgMode === m;
-            return <button key={m} onClick={() => { setAvgMode(m); setView2(maxEnd, m === "raw" ? 31 : m === "7" ? 182 : m === "30" ? 913 : maxSpan); }} aria-pressed={on} style={{ flex: "0 0 auto", minWidth: 48, height: 38, padding: "0 10px", borderRadius: 10, border: `1px solid ${on ? AVG : C.border}`, background: on ? AVG : PANEL, color: on ? "#ffffff" : INK, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{m === "raw" ? "원본" : m}</button>;
+            return <button key={m} onClick={() => setAvgMode(m)} aria-pressed={on} style={{ flex: "0 0 auto", minWidth: 48, height: 38, padding: "0 10px", borderRadius: 10, border: `1px solid ${on ? AVG : C.border}`, background: on ? AVG : PANEL, color: on ? "#ffffff" : INK, fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>{m === "raw" ? "원본" : m}</button>;
           })}
         </div>
         <div style={{ display: "none" }}>
